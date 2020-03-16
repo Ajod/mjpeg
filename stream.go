@@ -20,6 +20,7 @@ type Stream struct {
 	frame         []byte
 	lock          sync.Mutex
 	FrameInterval time.Duration
+	IsConnected   chan bool
 }
 
 const boundaryWord = "MJPEGBOUNDARY"
@@ -52,6 +53,7 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	delete(s.m, c)
 	s.lock.Unlock()
+	s.IsConnected <- false
 	log.Println("Stream:", r.RemoteAddr, "disconnected")
 }
 
@@ -83,5 +85,6 @@ func NewStream() *Stream {
 		m:             make(map[chan []byte]bool),
 		frame:         make([]byte, len(headerf)),
 		FrameInterval: 50 * time.Millisecond,
+		IsConnected:   make(chan bool),
 	}
 }
